@@ -301,7 +301,7 @@ module TransactionSupport
       # Zaciagniecie pliku JS z funkcjami do wyboru rodzaju platnosci bezposrednio z serwera platnosci.pl
       # == Parametry
       # ::pos_id - opcjonalny idik posa jezeli nie podany brany jest pod uwagę pierwszy z konfiguracji
-      def include_javascript_paytype(pos_id=nil)
+      def include_javascript_paytype(pos_id = nil)
         javascript_include_tag Configuration.connector.paytype_js_src(pos_id)
       end
     end
