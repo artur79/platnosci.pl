@@ -146,7 +146,7 @@ module TransactionSupport
           if response.code == '200'
             # nie uzywam YAMLa z powodu potencjalnych bledow w parsowaniu szczegoly opisane w komentarzu do parse_body
             body = parse_body(response.body, RESP_ALLOWED_KEYS)
-            logger.info body
+            puts body.inspect
             result = PaymentState.new(body)
           else
             raise TransactionSupportError, "Wrong response code='#{response.code}'"
