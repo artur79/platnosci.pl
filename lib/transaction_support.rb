@@ -10,6 +10,7 @@
 # TransactionSupport.config.key2 = '...'
 # TransactionSupport.config.pos_id = '...'
 # TransactionSupport.config.pos_auth_key = '...'
+# TransactionSupport.config.check_report_sig = '...'
 # W pliku konfiguracyjnym environment.rb mozna dodatkowo wywolac
 # TransactionSupport.validate_config aby sprawdzić poprawność konfigruacji.
 # Metoda zglosi wyjatek gdy konfiguracja będzie blędna lub niepełna.
@@ -145,6 +146,7 @@ module TransactionSupport
           if response.code == '200'
             # nie uzywam YAMLa z powodu potencjalnych bledow w parsowaniu szczegoly opisane w komentarzu do parse_body
             body = parse_body(response.body, RESP_ALLOWED_KEYS)
+            logger.info body
             result = PaymentState.new(body)
           else
             raise TransactionSupportError, "Wrong response code='#{response.code}'"
@@ -179,19 +181,28 @@ module TransactionSupport
       # Jezeli pos_id nie jest podany - wybierany jest pierwszy ze skonfigurowanych pos_id
       def prepare_request_data(session_id, pos_id)
         pos = pos_id || @parameters.pos_id.to_a.first
-        # tak zeby odpowiadalo ts z platnosci czyli javowe z dokladnoscia do ms,
-        ts = (Time.now.to_f*1000).to_i
+        
         data = {
           :pos_id => pos,
           :session_id => session_id,
-          :ts => ts,
+          :ts => calculate_ts,
           :sig => sign(pos, session_id, ts, @parameters.key1)
         }
         data
       end
 
       def sign(pos_id, session_id, ts, key)
-        ::Digest::MD5.hexdigest("#{pos_id}#{session_id}#{ts}#{key}")
+        Digest::MD5.hexdigest("#{pos_id}#{session_id}#{ts}#{key}")
+      end
+
+      # Sygnarura dla danych odesłanych przez platnosci.pl na url raportu
+      def sign_report(pos_id, session_id, order_id, status, amount, desc, ts, key2)
+        Digest::MD5.hexdigest("#{pos_id}#{session_id}#{order_id}#{status}#{amount}#{desc}#{ts}#{key2}")
+      end
+
+      def calculate_ts
+         # tak zeby odpowiadalo ts z platnosci czyli javowe z dokladnoscia do ms,
+        (Time.now.to_f*1000).to_i
       end
 
       # Inicjalizacja HTTP, jako osobna metoda upraszcza testowanie
