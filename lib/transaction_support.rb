@@ -181,11 +181,13 @@ module TransactionSupport
       # Jezeli pos_id nie jest podany - wybierany jest pierwszy ze skonfigurowanych pos_id
       def prepare_request_data(session_id, pos_id)
         pos = pos_id || @parameters.pos_id.to_a.first
-        
+
+        ts = calculate_ts
+
         data = {
           :pos_id => pos,
           :session_id => session_id,
-          :ts => calculate_ts,
+          :ts => ts,
           :sig => sign(pos, session_id, ts, @parameters.key1)
         }
         data
