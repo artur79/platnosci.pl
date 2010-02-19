@@ -153,7 +153,7 @@ module TransactionSupport
 
             if config.check_report_sig 
               ts = calculate_ts
-              sr = sign_report(pos_id, session_id, result.order_id, result.status, result.amount, result.desc, ts, config.key2)
+              sr = sign_report(pos_id, session_id, result.order_id, result.status, result.amount, result.desc, ts, @parameters.key2)
               puts sr
             end
 
