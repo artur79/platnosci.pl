@@ -152,9 +152,9 @@ module TransactionSupport
             result = PaymentState.new(body)
 
             if @parameters.check_report_sig
-              ts = calculate_ts
-              sr = sign_report(pos_id, session_id, result.order_id, result.trans_status, result.trans_amount, result.trans_desc, ts, @parameters.key2)
-              puts sr
+              #ts = calculate_ts
+              #sr = sign_report(pos_id, session_id, result.order_id, result.trans_status, result.trans_amount, result.trans_desc, ts, @parameters.key2)
+              puts result.inspect
             end
 
           else
