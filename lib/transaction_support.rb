@@ -5,6 +5,8 @@
 # Przed pierwszym użyciem connector musi zostać odpowiednio skonfigurowany.
 # Obowiązkowe są parametry pos_id, key1, key2 wszystkie do odczytania z konfiguracji
 # POSa w panelu administracyjnym.
+# Klucz autoryzacji płatności pos_auth_key przy tworzeniu transakcji nie jest obowiązkowy tylko gdy weryfikacja po pos_auth_key jest wyłączona z poziomu aplikacji.
+# Wyłączyć tą opcję mogą tylko pracownicy BOK. Jest to działanie niezalecane.
 # Przyklad konfiguracji:
 # TransactionSupport.config.key1 = '...'
 # TransactionSupport.config.key2 = '...'
@@ -93,7 +95,8 @@ module TransactionSupport
       '888' => 'błędny status'
     }.freeze
     HEADERS = {'User-Agent' =>'RubyWay!'}.freeze
-    RESP_ALLOWED_KEYS=['status', 'trans_status', 'trans_session_id', 'trans_order_id', 'trans_id', 'trans_pay_type', 'trans_pay_gw_name', 'trans_amount', 'error_nr', 'error_message'].freeze
+    RESP_ALLOWED_KEYS=['status', 'trans_status', 'trans_session_id', 'trans_order_id', 'trans_id', 'trans_pay_type', 'trans_pay_gw_name', 
+      'trans_amount', 'trans_desc', 'trans_sig', 'error_nr', 'error_message'].freeze
 
     class Connector
       attr_reader :new_payment_url
@@ -146,8 +149,14 @@ module TransactionSupport
           if response.code == '200'
             # nie uzywam YAMLa z powodu potencjalnych bledow w parsowaniu szczegoly opisane w komentarzu do parse_body
             body = parse_body(response.body, RESP_ALLOWED_KEYS)
-            puts body.inspect
             result = PaymentState.new(body)
+
+            if config.check_report_sig 
+              ts = calculate_ts
+              sr = sign_report(pos_id, session_id, result.order_id, result.status, result.amount, result.desc, ts, config.key2)
+              puts sr
+            end
+
           else
             raise TransactionSupportError, "Wrong response code='#{response.code}'"
           end
@@ -285,7 +294,7 @@ module TransactionSupport
       end
 
 
-      # Jezeli platnosci zglosily blad transmisji (najczescies spowodowany zlymi parametrami)
+      # Jezeli platnosci zglosily blad transmisji (najczęsciej spowodowany zlymi parametrami)
       def error?
         self['status']=='ERROR'
       end
