@@ -151,7 +151,7 @@ module TransactionSupport
             body = parse_body(response.body, RESP_ALLOWED_KEYS)
             result = PaymentState.new(body)
 
-            if config.check_report_sig 
+            if @parameters.check_report_sig
               ts = calculate_ts
               sr = sign_report(pos_id, session_id, result.order_id, result.status, result.amount, result.desc, ts, @parameters.key2)
               puts sr
